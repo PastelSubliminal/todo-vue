@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>todos</title>
+  <style>
+    li button {
+      display: none;
+    }
+    li:hover button {
+      display: inline-block;
+    }
+    li.completed span {
+      text-decoration: line-through;
+    }
+
+    ul.active li.completed {
+      display: none;
+    }
+    ul.completed li.active {
+      display: none;
+    }
+  </style>
+<!-- 基于DOM的模板，使用html属性来做为模板标识
+基于字符串和模板自身的特殊符号的模板，lodash.template, ejs，handlebars
+pug，完全自有的模板语法，专门为生成html语言而设计的。 -->
+</head>
+<body>
+
+  <div id="container">
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script xtype="xxx">
+    var app = new Vue({
+      updated() {
+        console.log('updated')
+      },
+      el: '#container',
+      template: `
+        <div id="container">
+          <h3 :style="{boxSizing: 'border-box', color: 'red'}">todos</h3>
+          <div>
+            <input onclick="foo()" type="checkbox" @click="toggleSelectAll()" v-if="todos.length" :checked="isAllChecked">
+            <input type="text" v-model.trim.lazy="todoText" @keyup.enter="addTodo">
+          </div>
+          <ul class="todo-list" :class="showingCategory">
+            <li v-for="(todo, index) in showingTodos" :key="index" class="todo-item" :class="{completed: todo.completed, active: !todo.completed}">
+              <input type="checkbox" v-model="todo.completed">
+              <span v-if="editingIdx !== index" @dblclick="setEditIdx(index)">{{ todo.content }}</span>
+              <input ref="editBox" class="edit-box" v-else v-model="todo.content" @keyup.enter="editTodo" @blur="editTodo" type="text">
+              <button @click="deleteTodo(todo)">&times;</button>
+            </li>
+          </ul>
+          <div v-show="todos.length">
+            <span>{{ countLeftItems }} items left</span>
+            <div>
+              <label><input v-model="showingCategory" type="radio" value="all"> All</label>
+              <label><input v-model="showingCategory" type="radio" value="active"> Active</label>
+              <label><input v-model="showingCategory" type="radio" value="completed"> Completed</label>
+            </div>
+            <button @click="clearCompleted()" v-show="todos.some(it => it.completed)">Clear completed</button>
+          </div>
+        </div>
+      `,
+      // render(createElement) {
+      //   return createElement('div', {id: this.foo}, ['hello'])
+      // },
+      data() {
+        return {
+          foo: 'typex',
+          msg: 'hello vue!',
+          showingCategory: 'all',
+          todoText: '',
+          editingIdx: -1,
+          todos: localStorage.todos && JSON.parse(localStorage.todos) || [{
+            content: 'eat',
+            completed: true,
+          }, {
+            content: 'drink',
+            completed: false,
+          }, {
+            content: 'sleep',
+            completed: true,
+          }],
+        }
+      },
+      computed: {//由现有数据推导出来的数据
+        showingTodos() {
+          console.log('2222222222222')
+          return this.todos.filter(todo => this.showingCategory == 'all' ? true : this.showingCategory == 'active' ? !todo.completed : todo.completed)
+        },
+        foobar() {
+          return [{a:this.todos.length > 10, b:true, c:false}, 'fooo', 'barrrrrrrrrrrr']
+        },
+        isAllChecked() {
+          return this.todos.every(it => it.completed) && this.todos.length
+        },
+        countLeftItems() {
+          return this.todos.filter(it => !it.completed).length
+        },
+      },
+      watch: {
+        editingIdx: function(){
+          debugger
+          console.log('???')
+        },
+        todos: {
+          handler: function() {
+            this.leftCount = this.todos.filter(it => !it.completed).length
+            localStorage.todos = JSON.stringify(this.$data.todos)
+          },
+          deep: true,
+        },
+      },
+      methods: {
+        addTodo(e) {
+          if (this.todoText) {
+            this.$data.todos.push({
+              content: this.todoText,
+              completed: false,
+            })
+            this.todoText = ''
+          }
+        },
+        deleteTodo(todo) {
+          // this.$data.todos.splice(index, 1)
+          this.$data.todos = this.$data.todos.filter((it, idx) => it !== todo)
+        },
+        editTodo() {
+          console.log('keyup')
+          this.$data.editingIdx = -1
+        },
+        setEditIdx(idx) {
+          this.$data.editingIdx = idx
+          setTimeout(() => {
+            debugger
+            this.$refs.editBox[0].focus()
+          })
+        },
+        clearCompleted() {
+          this.$data.todos = this.$data.todos.filter(it => !it.completed)
+        },
+        toggleSelectAll() {
+          if (app.$data.todos.every(it => it.completed)) {
+            app.$data.todos.forEach(it => {
+              it.completed = false
+            })
+          } else {
+            app.$data.todos.forEach(it => {
+              it.completed = true
+            })
+          }
+        },
+      },
+      created: function(){
+        console.log(1)
+      },
+    })
+
+
+  </script>
+</body>
+</html>
